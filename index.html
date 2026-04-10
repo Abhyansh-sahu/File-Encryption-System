@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CRYPT//X — File Encryption System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0c10; --surface: #111318; --surface2: #1a1d25;
+      --border: #2a2d38; --accent: #00e5a0; --accent2: #0088ff;
+      --text: #e8eaf0; --muted: #6b7080; --danger: #ff4d6d;
+      --font: 'Outfit', sans-serif; --mono: 'Share Tech Mono', monospace;
+    }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 2rem 1rem; }
+    .app { width: 100%; max-width: 540px; }
+    .logo { text-align: center; margin-bottom: 2.5rem; }
+    .logo-icon { width: 60px; height: 60px; margin: 0 auto 1rem; }
+    .logo-icon svg { width: 100%; height: 100%; }
+    .logo h1 { font-family: var(--mono); font-size: 1.4rem; letter-spacing: 5px; color: var(--accent); font-weight: 400; }
+    .logo p { font-size: 0.72rem; color: var(--muted); letter-spacing: 3px; margin-top: 5px; }
+    .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 16px; padding: 2rem; position: relative; overflow: hidden; }
+    .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0.6; }
+    .tabs { display: flex; border: 0.5px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 2rem; }
+    .tab { flex: 1; padding: 0.65rem; font-size: 0.8rem; font-family: var(--mono); letter-spacing: 2px; background: transparent; border: none; color: var(--muted); cursor: pointer; transition: all 0.2s; }
+    .tab.active { background: var(--surface2); color: var(--accent); }
+    .tab:hover:not(.active) { color: var(--text); }
+    .field { margin-bottom: 1.25rem; }
+    label { display: block; font-size: 0.7rem; font-family: var(--mono); letter-spacing: 2px; color: var(--muted); margin-bottom: 0.5rem; }
+    input[type="text"], input[type="email"], input[type="password"] {
+      width: 100%; background: var(--surface2); border: 0.5px solid var(--border);
+      border-radius: 8px; padding: 0.75rem 1rem; color: var(--text);
+      font-family: var(--mono); font-size: 0.88rem; outline: none; transition: border-color 0.2s;
+    }
+    input:focus { border-color: var(--accent); }
+    input::placeholder { color: var(--muted); }
+    .btn { width: 100%; padding: 0.85rem; border: none; border-radius: 10px; font-family: var(--mono); font-size: 0.82rem; letter-spacing: 2px; cursor: pointer; transition: all 0.2s; margin-top: 0.5rem; }
+    .btn-primary { background: var(--accent); color: #000; font-weight: 600; }
+    .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-secondary { background: transparent; border: 0.5px solid var(--accent); color: var(--accent); }
+    .btn-secondary:hover { background: rgba(0,229,160,0.08); }
+    .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-danger { background: transparent; border: 0.5px solid var(--danger); color: var(--danger); }
+    .btn-danger:hover { background: rgba(255,77,109,0.08); }
+    .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+    .msg { font-size: 0.72rem; font-family: var(--mono); margin-top: 0.6rem; display: none; padding: 0.6rem 0.8rem; border-radius: 6px; }
+    .msg.error { color: var(--danger); background: rgba(255,77,109,0.08); border: 0.5px solid rgba(255,77,109,0.3); display: block; }
+    .msg.success { color: var(--accent); background: rgba(0,229,160,0.08); border: 0.5px solid rgba(0,229,160,0.3); display: block; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+    .user-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+    .user-info { display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 38px; height: 38px; border-radius: 50%; background: rgba(0,229,160,0.12); border: 0.5px solid var(--accent); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 0.8rem; color: var(--accent); }
+    .user-name { font-size: 0.9rem; font-weight: 500; }
+    .user-role { font-size: 0.65rem; font-family: var(--mono); color: var(--muted); }
+    .logout-btn { background: transparent; border: 0.5px solid var(--border); color: var(--muted); padding: 0.4rem 0.85rem; border-radius: 6px; font-size: 0.68rem; font-family: var(--mono); cursor: pointer; letter-spacing: 1px; transition: all 0.2s; }
+    .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+    .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
+    .stat-card { background: var(--surface2); border: 0.5px solid var(--border); border-radius: 10px; padding: 1rem; text-align: center; }
+    .stat-val { font-size: 1.5rem; font-family: var(--mono); color: var(--accent); }
+    .stat-val.blue { color: var(--accent2); }
+    .stat-lbl { font-size: 0.62rem; font-family: var(--mono); color: var(--muted); letter-spacing: 2px; margin-top: 4px; }
+    .section-title { font-size: 0.65rem; font-family: var(--mono); color: var(--muted); letter-spacing: 3px; margin-bottom: 1rem; }
+    .action-row { display: flex; flex-direction: column; gap: 10px; }
+    .action-btn { display: flex; align-items: center; gap: 14px; background: var(--surface2); border: 0.5px solid var(--border); border-radius: 10px; padding: 0.9rem 1rem; cursor: pointer; transition: border-color 0.2s; text-align: left; width: 100%; color: var(--text); font-family: var(--font); }
+    .action-btn:hover { border-color: var(--accent); }
+    .action-icon { width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .icon-green { background: rgba(0,229,160,0.1); }
+    .icon-blue  { background: rgba(0,136,255,0.1); }
+    .icon-pink  { background: rgba(255,77,109,0.1); }
+    .action-text p { font-size: 0.88rem; font-weight: 500; }
+    .action-text span { font-size: 0.68rem; font-family: var(--mono); color: var(--muted); }
+    .back-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; }
+    .back-btn { background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 1.1rem; padding: 0; transition: color 0.2s; }
+    .back-btn:hover { color: var(--accent); }
+    .back-bar span { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 3px; color: var(--muted); }
+    .result-box { display: none; margin-top: 1.25rem; background: var(--surface2); border: 0.5px solid var(--accent); border-radius: 10px; padding: 1rem; }
+    .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+    .badge { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 0.65rem; font-family: var(--mono); letter-spacing: 1px; }
+    .badge-success { background: rgba(0,229,160,0.12); color: var(--accent); }
+    .badge-blue    { background: rgba(0,136,255,0.12); color: var(--accent2); }
+    .result-filename { font-family: var(--mono); font-size: 0.85rem; color: var(--text); }
+    .result-sub { font-size: 0.7rem; color: var(--muted); margin-top: 3px; }
+    .map-section { margin-top: 1rem; padding-top: 0.75rem; border-top: 0.5px solid var(--border); }
+    .map-title { font-size: 0.62rem; font-family: var(--mono); color: var(--muted); letter-spacing: 2px; margin-bottom: 8px; }
+    .map-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+    .pill { background: var(--surface); border: 0.5px solid var(--border); border-radius: 6px; padding: 4px 10px; font-family: var(--mono); font-size: 0.7rem; display: flex; align-items: center; gap: 6px; }
+    .pill .ch  { color: var(--accent); }
+    .pill .arr { color: var(--muted); }
+    .pill .cd  { color: var(--accent2); }
+    .preview-box { margin-top: 1rem; background: var(--surface); border: 0.5px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; font-family: var(--mono); font-size: 0.78rem; color: var(--text); line-height: 1.6; max-height: 140px; overflow-y: auto; word-break: break-all; }
+    .filepath-box { display: flex; gap: 8px; }
+    .filepath-box input { flex: 1; }
+    .enc-action-btn { background: var(--accent); color: #000; border: none; border-radius: 8px; padding: 0.75rem 1.1rem; font-family: var(--mono); font-size: 0.72rem; letter-spacing: 1px; cursor: pointer; white-space: nowrap; transition: opacity 0.2s; font-weight: 600; }
+    .enc-action-btn:hover { opacity: 0.85; }
+    .enc-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(0,0,0,0.3); border-top-color: #000; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .ticker { font-family: var(--mono); font-size: 0.62rem; color: var(--muted); letter-spacing: 2px; text-align: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 0.5px solid var(--border); }
+    .ticker span { color: var(--accent); }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="22" width="38" height="30" rx="6" fill="#111318" stroke="#2a2d38" stroke-width="1"/>
+        <rect x="9" y="27" width="28" height="20" rx="3" fill="#1a1d25"/>
+        <path d="M14 22V16a9 9 0 0 1 18 0v6" stroke="#00e5a0" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="23" cy="37" r="3" fill="#00e5a0" opacity="0.85"/>
+        <rect x="22" y="37" width="2" height="5" rx="1" fill="#00e5a0" opacity="0.85"/>
+        <circle cx="46" cy="15" r="12" fill="#0088ff" opacity="0.1"/>
+        <text x="46" y="20" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="11" fill="#0088ff">01</text>
+      </svg>
+    </div>
+    <h1>CRYPT//X</h1>
+    <p>FILE ENCRYPTION SYSTEM</p>
+  </div>
+  <div class="screen active" id="screen-auth">
+    <div class="card">
+      <div class="tabs">
+        <button class="tab active" id="tab-btn-login" onclick="switchTab('login')">LOGIN</button>
+        <button class="tab" id="tab-btn-register" onclick="switchTab('register')">REGISTER</button>
+      </div>
+      <div id="tab-login">
+        <div class="field">
+          <label>EMAIL ADDRESS</label>
+          <input type="email" id="login-email" placeholder="you@gmail.com"/>
+        </div>
+        <div class="field">
+          <label>PASSWORD</label>
+          <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter') doLogin()"/>
+        </div>
+        <div class="msg" id="login-msg"></div>
+        <button class="btn btn-primary" id="login-btn" onclick="doLogin()">UNLOCK →</button>
+      </div>
+      <div id="tab-register" style="display:none;">
+        <div class="field">
+          <label>FULL NAME</label>
+          <input type="text" id="reg-name" placeholder="John Doe"/>
+        </div>
+        <div class="field">
+          <label>EMAIL ADDRESS (Gmail only)</label>
+          <input type="email" id="reg-email" placeholder="you@gmail.com"/>
+        </div>
+        <div class="field">
+          <label>PASSWORD</label>
+          <input type="password" id="reg-pass" placeholder="Min. 6 characters" onkeydown="if(event.key==='Enter') doRegister()"/>
+        </div>
+        <div class="msg" id="reg-msg"></div>
+        <button class="btn btn-primary" id="reg-btn" onclick="doRegister()">CREATE ACCOUNT →</button>
+      </div>
+    </div>
+    <div class="ticker">ENCRYPTION ENGINE v2.4 &nbsp;|&nbsp; <span>SECURE</span> MODE ACTIVE</div>
+  </div>
+  <div class="screen" id="screen-dash">
+    <div class="card">
+      <div class="user-bar">
+        <div class="user-info">
+          <div class="avatar" id="dash-avatar">JD</div>
+          <div>
+            <div class="user-name" id="dash-name">John Doe</div>
+            <div class="user-role">AUTHENTICATED USER</div>
+          </div>
+        </div>
+        <button class="logout-btn" onclick="doLogout()">LOGOUT</button>
+      </div>
+      <div class="dashboard-grid">
+        <div class="stat-card">
+          <div class="stat-val" id="stat-files">0</div>
+          <div class="stat-lbl">FILES ENCRYPTED</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val blue" id="stat-keys">0</div>
+          <div class="stat-lbl">KEYS GENERATED</div>
+        </div>
+      </div>
+      <div class="section-title">ACTIONS</div>
+      <div class="action-row">
+        <button class="action-btn" onclick="showScreen('screen-encrypt')">
+          <div class="action-icon icon-green">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <rect x="2" y="8" width="16" height="11" rx="2.5" stroke="#00e5a0" stroke-width="1.3"/>
+              <path d="M5.5 8V6a4.5 4.5 0 0 1 9 0v2" stroke="#00e5a0" stroke-width="1.3" stroke-linecap="round"/>
+              <circle cx="10" cy="13.5" r="1.8" fill="#00e5a0"/>
+            </svg>
+          </div>
+          <div class="action-text">
+            <p>Encrypt New File</p>
+            <span>SELECT AND ENCRYPT A FILE</span>
+          </div>
+        </button>
+        <button class="action-btn" onclick="showScreen('screen-decrypt')">
+          <div class="action-icon icon-blue">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M3 6h14v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6z" stroke="#0088ff" stroke-width="1.3"/>
+              <path d="M3 6l2-4h10l2 4" stroke="#0088ff" stroke-width="1.3" stroke-linecap="round"/>
+              <path d="M7 10.5h6M7 13.5h4" stroke="#0088ff" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="action-text">
+            <p>Decrypt File</p>
+            <span>OPEN AND DECRYPT AN ENCRYPTED FILE</span>
+          </div>
+        </button>
+        <button class="action-btn" onclick="showScreen('screen-regen')">
+          <div class="action-icon icon-pink">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M3.5 10a6.5 6.5 0 1 1 13 0" stroke="#ff4d6d" stroke-width="1.3" stroke-linecap="round"/>
+              <path d="M16.5 10l-2 2-2-2" stroke="#ff4d6d" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="5.5" y="11" width="9" height="6" rx="2" stroke="#ff4d6d" stroke-width="1.3"/>
+            </svg>
+          </div>
+          <div class="action-text">
+            <p>Regenerate Keys</p>
+            <span>UPDATE ENCRYPTION CODES FOR A FILE</span>
+          </div>
+        </button>
+      </div>
+    </div>
+    <div class="ticker">SESSION ACTIVE &nbsp;|&nbsp; <span id="session-time">00:00</span></div>
+  </div>
+  <div class="screen" id="screen-encrypt">
+    <div class="card">
+      <div class="back-bar">
+        <button class="back-btn" onclick="showScreen('screen-dash')">←</button>
+        <span>ENCRYPT FILE</span>
+      </div>
+      <div class="field">
+        <label>FULL FILE PATH</label>
+        <div class="filepath-box">
+          <input type="text" id="enc-path" placeholder="C:\Users\you\document.txt"/>
+          <button class="enc-action-btn" id="enc-btn" onclick="doEncrypt()">ENCRYPT</button>
+        </div>
+      </div>
+      <div class="msg" id="enc-msg"></div>
+      <div class="result-box" id="enc-result">
+        <div class="result-header">
+          <span class="badge badge-success">ENCRYPTED</span>
+          <span style="font-family:var(--mono);font-size:0.62rem;color:var(--muted);" id="enc-time"></span>
+        </div>
+        <div class="result-filename" id="enc-filename"></div>
+        <div class="result-sub" id="enc-sub"></div>
+        <div class="map-section">
+          <div class="map-title">SAMPLE CHAR → CODE MAPPING</div>
+          <div class="map-pills" id="map-pills"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="screen" id="screen-decrypt">
+    <div class="card">
+      <div class="back-bar">
+        <button class="back-btn" onclick="showScreen('screen-dash')">←</button>
+        <span>DECRYPT FILE</span>
+      </div>
+      <div class="field">
+        <label>TABLE / FILE NAME (e.g. my_document_txt)</label>
+        <input type="text" id="dec-name" placeholder="my_document_txt"/>
+      </div>
+      <button class="btn btn-secondary" id="dec-btn" onclick="doDecrypt()">DECRYPT FILE</button>
+      <div class="msg" id="dec-msg"></div>
+      <div class="result-box" id="dec-result">
+        <div class="result-header">
+          <span class="badge badge-blue">DECRYPTED</span>
+          <span style="font-family:var(--mono);font-size:0.62rem;color:var(--muted);" id="dec-outfile"></span>
+        </div>
+        <div class="result-filename" id="dec-filename"></div>
+        <div class="result-sub">Preview (first 300 chars)</div>
+        <div class="preview-box" id="dec-preview"></div>
+      </div>
+    </div>
+  </div>
+  <div class="screen" id="screen-regen">
+    <div class="card">
+      <div class="back-bar">
+        <button class="back-btn" onclick="showScreen('screen-dash')">←</button>
+        <span>REGENERATE KEYS</span>
+      </div>
+      <div class="field">
+        <label>TABLE / FILE NAME (e.g. my_document_txt)</label>
+        <input type="text" id="regen-name" placeholder="my_document_txt"/>
+      </div>
+      <button class="btn btn-danger" id="regen-btn" onclick="doRegen()">REGENERATE ALL KEYS</button>
+      <div class="msg" id="regen-msg"></div>
+      <div class="result-box" id="regen-result">
+        <div class="result-header">
+          <span class="badge badge-success">KEYS UPDATED</span>
+        </div>
+        <div class="result-filename" id="regen-filename"></div>
+        <div class="result-sub" id="regen-sub"></div>
+        <div class="map-section">
+          <div class="map-title">SAMPLE NEW MAPPING</div>
+          <div class="map-pills" id="regen-pills"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  const API = 'http://localhost:5000/api';
+  let sessionStart = null;
+  let timerInterval = null;
+  let fileCount = 0;
+  let keyCount = 0;
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+  function switchTab(t) {
+    document.getElementById('tab-btn-login').classList.toggle('active', t === 'login');
+    document.getElementById('tab-btn-register').classList.toggle('active', t === 'register');
+    document.getElementById('tab-login').style.display    = t === 'login'    ? 'block' : 'none';
+    document.getElementById('tab-register').style.display = t === 'register' ? 'block' : 'none';
+  }
+  function setMsg(id, text, type) {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.className = 'msg ' + type;
+  }
+  function clearMsg(id) {
+    const el = document.getElementById(id);
+    el.textContent = '';
+    el.className = 'msg';
+  }
+  function setLoading(btnId, loading, label) {
+    const btn = document.getElementById(btnId);
+    btn.disabled = loading;
+    btn.innerHTML = loading ? `<span class="spinner"></span> PROCESSING...` : label;
+  }
+  function updateTimer() {
+    const s   = Math.floor((Date.now() - sessionStart) / 1000);
+    const m   = Math.floor(s / 60).toString().padStart(2, '0');
+    const sec = (s % 60).toString().padStart(2, '0');
+    document.getElementById('session-time').textContent = m + ':' + sec;
+  }
+  function updateStats() {
+    document.getElementById('stat-files').textContent = fileCount;
+    document.getElementById('stat-keys').textContent  = keyCount;
+  }
+  function renderPills(containerId, mapping) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    mapping.slice(0, 12).forEach(({ char, code }) => {
+      const pill = document.createElement('div');
+      pill.className = 'pill';
+      const display = char === ' ' ? '␣' : char;
+      pill.innerHTML = `<span class="ch">${display}</span><span class="arr">→</span><span class="cd">${code}</span>`;
+      container.appendChild(pill);
+    });
+  }
+  async function doRegister() {
+    const name  = document.getElementById('reg-name').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const pass  = document.getElementById('reg-pass').value.trim();
+    clearMsg('reg-msg');
+    if (!name || !email || !pass) { setMsg('reg-msg', 'All fields are required.', 'error'); return; }
+    setLoading('reg-btn', true, 'CREATE ACCOUNT →');
+    try {
+      const res  = await fetch(`${API}/register`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ name, email, password: pass }) });
+      const data = await res.json();
+      if (data.success) {
+        setMsg('reg-msg', `Account created! Logging you in...`, 'success');
+        setTimeout(() => {
+          switchTab('login');
+          document.getElementById('login-email').value = email;
+          document.getElementById('login-pass').value  = pass;
+          clearMsg('reg-msg');
+        }, 1200);
+      } else {
+        setMsg('reg-msg', data.message, 'error');
+      }
+    } catch (e) {
+      setMsg('reg-msg', 'Cannot connect to server. Is Flask running?', 'error');
+    }
+    setLoading('reg-btn', false, 'CREATE ACCOUNT →');
+  }
+  async function doLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const pass  = document.getElementById('login-pass').value.trim();
+    clearMsg('login-msg');
+    if (!email || !pass) { setMsg('login-msg', 'Please enter email and password.', 'error'); return; }
+    setLoading('login-btn', true, 'UNLOCK →');
+    try {
+      const res  = await fetch(`${API}/login`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ email, password: pass }) });
+      const data = await res.json();
+      if (data.success) {
+        clearMsg('login-msg');
+        const initials = data.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        document.getElementById('dash-avatar').textContent = initials;
+        document.getElementById('dash-name').textContent   = data.name;
+        fileCount = 0; keyCount = 0;
+        updateStats();
+        sessionStart = Date.now();
+        clearInterval(timerInterval);
+        timerInterval = setInterval(updateTimer, 1000);
+        showScreen('screen-dash');
+      } else {
+        setMsg('login-msg', data.message, 'error');
+      }
+    } catch (e) {
+      setMsg('login-msg', 'Cannot connect to server. Is Flask running?', 'error');
+    }
+    setLoading('login-btn', false, 'UNLOCK →');
+  }
+  function doLogout() {
+    clearInterval(timerInterval);
+    showScreen('screen-auth');
+  }
+  async function doEncrypt() {
+    const path = document.getElementById('enc-path').value.trim();
+    clearMsg('enc-msg');
+    document.getElementById('enc-result').style.display = 'none';
+    if (!path) { setMsg('enc-msg', 'Please enter a file path.', 'error'); return; }
+    setLoading('enc-btn', true, 'ENCRYPT');
+    try {
+      const res  = await fetch(`${API}/encrypt`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ file_path: path }) });
+      const data = await res.json();
+      if (data.success) {
+        fileCount++;
+        keyCount += data.total_chars;
+        updateStats();
+        document.getElementById('enc-filename').textContent = data.file_name;
+        document.getElementById('enc-sub').textContent      = `${data.total_chars} unique characters mapped · Output: ${data.encrypted_file}`;
+        document.getElementById('enc-time').textContent     = new Date().toLocaleTimeString();
+        renderPills('map-pills', data.sample_mapping);
+        document.getElementById('enc-result').style.display = 'block';
+        setMsg('enc-msg', 'File encrypted successfully!', 'success');
+      } else {
+        setMsg('enc-msg', data.message, 'error');
+      }
+    } catch (e) {
+      setMsg('enc-msg', 'Cannot connect to server. Is Flask running?', 'error');
+    }
+    setLoading('enc-btn', false, 'ENCRYPT');
+  }
+  async function doDecrypt() {
+    const name = document.getElementById('dec-name').value.trim();
+    clearMsg('dec-msg');
+    document.getElementById('dec-result').style.display = 'none';
+    if (!name) { setMsg('dec-msg', 'Please enter the table/file name.', 'error'); return; }
+    setLoading('dec-btn', true, 'DECRYPT FILE');
+    try {
+      const res  = await fetch(`${API}/decrypt`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ file_name: name }) });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('dec-filename').textContent = data.file_name;
+        document.getElementById('dec-outfile').textContent  = data.output_file;
+        document.getElementById('dec-preview').textContent  = data.preview || '(empty)';
+        document.getElementById('dec-result').style.display = 'block';
+        setMsg('dec-msg', 'File decrypted successfully!', 'success');
+      } else {
+        setMsg('dec-msg', data.message, 'error');
+      }
+    } catch (e) {
+      setMsg('dec-msg', 'Cannot connect to server. Is Flask running?', 'error');
+    }
+    setLoading('dec-btn', false, 'DECRYPT FILE');
+  }
+  async function doRegen() {
+    const name = document.getElementById('regen-name').value.trim();
+    clearMsg('regen-msg');
+    document.getElementById('regen-result').style.display = 'none';
+    if (!name) { setMsg('regen-msg', 'Please enter the table/file name.', 'error'); return; }
+    setLoading('regen-btn', true, 'REGENERATE ALL KEYS');
+    try {
+      const res  = await fetch(`${API}/regenerate`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ file_name: name }) });
+      const data = await res.json();
+      if (data.success) {
+        keyCount += data.keys_updated;
+        updateStats();
+        document.getElementById('regen-filename').textContent = data.file_name;
+        document.getElementById('regen-sub').textContent      = `${data.keys_updated} keys regenerated`;
+        renderPills('regen-pills', data.sample_mapping);
+        document.getElementById('regen-result').style.display = 'block';
+        setMsg('regen-msg', 'All keys regenerated successfully!', 'success');
+      } else {
+        setMsg('regen-msg', data.message, 'error');
+      }
+    } catch (e) {
+      setMsg('regen-msg', 'Cannot connect to server. Is Flask running?', 'error');
+    }
+    setLoading('regen-btn', false, 'REGENERATE ALL KEYS');
+  }
+</script>
+</body>
+</html>
