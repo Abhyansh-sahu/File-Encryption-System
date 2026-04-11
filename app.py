@@ -64,7 +64,7 @@ def login():
     return jsonify({'success': False, 'message': 'Invalid email or password.'}), 401
 @app.route('/api/encrypt', methods=['POST'])
 def encrypt():
-    data      = request.json
+    data= request.json
     file_path = data.get('file_path', '').strip()
     if not os.path.exists(file_path):
         return jsonify({'success': False, 'message': 'File not found. Check the path.'}), 404
@@ -116,7 +116,7 @@ def encrypt():
     })
 @app.route('/api/regenerate', methods=['POST'])
 def regenerate():
-    data      = request.json
+    data=request.json
     file_name = data.get('file_name', '').strip()
     db = get_db()
     cursor = db.cursor()
