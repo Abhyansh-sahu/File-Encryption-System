@@ -32,8 +32,8 @@ def index():
 @app.route('/api/register', methods=['POST'])
 def register():
     data = request.json
-    name     = data.get('name', '').strip()
-    email    = data.get('email', '').strip()
+    name = data.get('name', '').strip()
+    email = data.get('email', '').strip()
     password = data.get('password', '').strip()
     if not name or not email or not password:
         return jsonify({'success': False, 'message': 'All fields are required.'}), 400
@@ -51,8 +51,8 @@ def register():
     return jsonify({'success': True, 'message': f'Account created for {name}.'})
 @app.route('/api/login', methods=['POST'])
 def login():
-    data     = request.json
-    email    = data.get('email', '').strip()
+    data = request.json
+    email = data.get('email', '').strip()
     password = data.get('password', '').strip()
     db = get_db()
     cursor = db.cursor()
